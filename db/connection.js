@@ -1,21 +1,21 @@
-const { Sequelize } = require('sequelize');
-const { DB_URI } = require('../utils/constants');
 
-// Database connection
-const sequelize = new Sequelize(DB_URI, {
-  dialect: 'postgres',
-  dialectOptions: {
+// Import and require Pool (node-postgres)
+// We'll be creating a Connection Pool. Read up on the benefits here: https://node-postgres.com/features/pooling
+const { Client } = require('pg');
+const {DB_URI} = require('../utils/constants');
+
+// Connect to database
+const client = new Client(
+  {
+    connectionString: DB_URI,
     ssl: {
       require: true,
       rejectUnauthorized: false,
-    },
+    }    
   },
-});
+  console.log(`Connected to CMS Tracker Database`)
+)
 
-// Test the database connection
-sequelize
-  .authenticate()
-  .then(() => console.log('Connection has been established successfully.'))
-  .catch((error) => console.error('Unable to connect to the database:', error));
+client.connect();
 
-module.exports = sequelize;
+module.exports = client;
