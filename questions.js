@@ -14,7 +14,7 @@ function startQuestions() {
                 "Update Employee Role",
                 "View All Roles",
                 "Add Role",
-                "View All Depoartments",
+                "View All Departments",
                 "Add Department",
             ],
         })
@@ -55,7 +55,7 @@ async function viewAllEmployees() {
     r.title,
     d.name AS "department",
     r.salary,
-    m.first_name + ' ' + m.last_name AS "manager"
+    m.first_name || ' ' || m.last_name AS "manager"
 
     FROM employees AS emp
 
@@ -71,7 +71,51 @@ async function viewAllEmployees() {
 
     try {
         const employees = await pgClient.query(sql);
-        console.table(employees);
+        // console.log(employees);
+        console.table(employees.rows);
+    } catch (error) {
+        console.log(error);
+    }
+}
+
+// Function to veiw all roles.
+async function viewAllRoles() {
+    const sql = `
+    SELECT
+    r.id,
+    r.title,
+    d.name AS "department",
+    r.salary
+
+    FROM roles AS r
+
+    INNER JOIN departments AS d 
+    ON r.department_id = d.id;
+    `;
+
+    try {
+        const roles = await pgClient.query(sql);
+        // console.log(roles);
+        console.table(roles.rows);
+    } catch (error) {
+        console.log(error);
+    }
+}
+
+// Function to veiw all departments.
+async function viewAllDepartments() {
+    const sql = `
+    SELECT
+    d.id,
+    d.name
+
+    FROM departments AS d;
+    `;
+
+    try {
+        const departments = await pgClient.query(sql);
+        // console.log(departments);
+        console.table(departments.rows);
     } catch (error) {
         console.log(error);
     }
