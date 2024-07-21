@@ -34,7 +34,7 @@ router.post('/api/employees', (req, res) => {
 });
 
 // Update an employee role.
-app.put('/api/employees/:id', (req, res) => {
+router.put('/api/employees/:id', (req, res) => {
     const sql = `UPDATE employees SET role_id = $1 WHERE id = $2`;
     const params = [req.body.role_id, req.params.id];
   

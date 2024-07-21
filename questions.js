@@ -1,5 +1,6 @@
 const inquirer = require("inquirer");
 const pgClient = require('./db/connection');
+const BASE_URL = "http://localhost:3000";
 
 // Function to prompt questions.
 function startQuestions() {
@@ -121,4 +122,64 @@ async function viewAllDepartments() {
     }
 }
 
-module.exports = startQuestions;
+//Function to add department.
+async function addDepartment() {
+    const answer = await inquirer.prompt({
+        type: "input",
+        name: "name",
+        message: "Enter a new department name:",
+    });
+
+    try {
+        const response = await fetch(`${BASE_URL}/api/departments`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ name: answer.name })
+        });
+        const data = await response.json();
+    } catch (error) {
+        console.log(error);
+    }
+}
+
+//Function to add role.
+async function addRole() {
+  try {
+    const departmentResponse = await fetch(`${BASE_URL}/api/departments`);
+    const departments = await departmentResponse.json();
+    const answers = await inquirer.prompt([{
+        type: "input",
+        name: "title",
+        message: "Enter a title for new role:",
+    }, {
+        type: "input",
+        name: "salary",
+        message: "Enter salary amount",
+    }, {
+        type: "list",
+        name: "department",
+        message: "Select department for new role:",
+        choices: departments.data.map(
+            (department) => department.name
+        )
+    }]);
+    const department = departments.data.find(
+        (department) => department.name === answers.department
+    );
+    const body = {
+        title: answers.title,
+        salary: answers.salary,
+        department_id: department.id
+    }
+    const response = await fetch(`${BASE_URL}/api/roles`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+    });
+    const data = await response.json();
+  } catch (error) {
+    console.log(error);
+  }
+}
+
+    module.exports = startQuestions;
