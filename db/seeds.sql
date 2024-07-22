@@ -1,3 +1,4 @@
+-- Initial data.
 INSERT INTO departments (name)
 VALUES 
 ('Sales'),

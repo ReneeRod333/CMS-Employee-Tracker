@@ -3,6 +3,7 @@ CREATE DATABASE cmsemployeetrackerdb;
 
 \c cmsemployeetrackerdb;
 
+-- Creates scripts for department, roles, and employee tables.
 CREATE TABLE departments (
     id SERIAL PRIMARY KEY,
     name VARCHAR(30)
