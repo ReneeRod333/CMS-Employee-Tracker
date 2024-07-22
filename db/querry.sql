@@ -6,7 +6,7 @@ emp.last_name,
 r.title,
 d.name AS "department",
 r.salary,
-m.first_name + ' ' + m.last_name AS "manager"
+m.first_name || ' ' || m.last_name AS "manager"
 
 FROM employees AS emp
 

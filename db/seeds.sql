@@ -3,7 +3,7 @@ VALUES
 ('Sales'),
 ('Marketing'),
 ('Human Resources'),
-('Maintenance');
+('Maintenance'),
 ('Operations Management'),
 ('Customer Relations');
 
@@ -13,7 +13,7 @@ VALUES
 ('Sales Assistant', 50000.00, 1),
 ('Marketing Director', 150000.00, 2),
 ('HR Manager', 90000.00, 3),
-('Maintenance Technician', 65000.00, 4);
+('Maintenance Technician', 65000.00, 4),
 ('Operations Manager ', 185000.00, 5),
 ('Customer Relations Specialist', 85000.00, 6);
 
