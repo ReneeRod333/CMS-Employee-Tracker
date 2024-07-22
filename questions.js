@@ -17,6 +17,7 @@ function startQuestions() {
                 "Add Role",
                 "View All Departments",
                 "Add Department",
+                "Exit",
             ],
         })
         .then((answer) => {
@@ -24,7 +25,7 @@ function startQuestions() {
                 case "View All Employees":
                     viewAllEmployees();
                     break;
-                case "Add Employees":
+                case "Add Employee":
                     addEmployees();
                     break;
                 case "Update Employee Role":
@@ -42,38 +43,21 @@ function startQuestions() {
                 case "Add Department":
                     addDepartment();
                     break;
+                case "Exit":
+                    pgClient.end();
+                    process.exit();
+                    break;
             }
         });
 }
 
 // Function to veiw all employees.
 async function viewAllEmployees() {
-    const sql = `
-    SELECT
-    emp.id,
-    emp.first_name,
-    emp.last_name,
-    r.title,
-    d.name AS "department",
-    r.salary,
-    m.first_name || ' ' || m.last_name AS "manager"
-
-    FROM employees AS emp
-
-    INNER JOIN roles AS r 
-    ON emp.role_id = r.id
-
-    INNER JOIN departments AS d 
-    ON r.department_id = d.id
-
-    LEFT JOIN employees AS m 
-    ON m.manager_id = emp.id;
-    `;
-
     try {
-        const employees = await pgClient.query(sql);
-        // console.log(employees);
-        console.table(employees.rows);
+        const response = await fetch(`${BASE_URL}/api/employees`);
+        const employees = await response.json();
+        console.table(employees.data);
+        startQuestions();
     } catch (error) {
         console.log(error);
     }
@@ -81,23 +65,11 @@ async function viewAllEmployees() {
 
 // Function to veiw all roles.
 async function viewAllRoles() {
-    const sql = `
-    SELECT
-    r.id,
-    r.title,
-    d.name AS "department",
-    r.salary
-
-    FROM roles AS r
-
-    INNER JOIN departments AS d 
-    ON r.department_id = d.id;
-    `;
-
     try {
-        const roles = await pgClient.query(sql);
-        // console.log(roles);
-        console.table(roles.rows);
+        const response = await fetch(`${BASE_URL}/api/roles`);
+        const roles = await response.json();
+        console.table(roles.data);
+        startQuestions();
     } catch (error) {
         console.log(error);
     }
@@ -105,18 +77,11 @@ async function viewAllRoles() {
 
 // Function to veiw all departments.
 async function viewAllDepartments() {
-    const sql = `
-    SELECT
-    d.id,
-    d.name
-
-    FROM departments AS d;
-    `;
-
     try {
-        const departments = await pgClient.query(sql);
-        // console.log(departments);
-        console.table(departments.rows);
+        const response = await fetch(`${BASE_URL}/api/departments`);
+        const departments = await response.json();
+        console.table(departments.data);
+        startQuestions();
     } catch (error) {
         console.log(error);
     }
@@ -137,6 +102,7 @@ async function addDepartment() {
             body: JSON.stringify({ name: answer.name })
         });
         const data = await response.json();
+        startQuestions();
     } catch (error) {
         console.log(error);
     }
@@ -144,42 +110,141 @@ async function addDepartment() {
 
 //Function to add role.
 async function addRole() {
-  try {
-    const departmentResponse = await fetch(`${BASE_URL}/api/departments`);
-    const departments = await departmentResponse.json();
-    const answers = await inquirer.prompt([{
-        type: "input",
-        name: "title",
-        message: "Enter a title for new role:",
-    }, {
-        type: "input",
-        name: "salary",
-        message: "Enter salary amount",
-    }, {
-        type: "list",
-        name: "department",
-        message: "Select department for new role:",
-        choices: departments.data.map(
-            (department) => department.name
-        )
-    }]);
-    const department = departments.data.find(
-        (department) => department.name === answers.department
-    );
-    const body = {
-        title: answers.title,
-        salary: answers.salary,
-        department_id: department.id
+    try {
+        const departmentResponse = await fetch(`${BASE_URL}/api/departments`);
+        const departments = await departmentResponse.json();
+        const answers = await inquirer.prompt([{
+            type: "input",
+            name: "title",
+            message: "Enter a title for new role:",
+        }, {
+            type: "input",
+            name: "salary",
+            message: "Enter salary amount",
+        }, {
+            type: "list",
+            name: "department",
+            message: "Select department for new role:",
+            choices: departments.data.map(
+                (department) => department.name
+            )
+        }]);
+        const department = departments.data.find(
+            (department) => department.name === answers.department
+        );
+        const body = {
+            title: answers.title,
+            salary: answers.salary,
+            department_id: department.id
+        }
+        const response = await fetch(`${BASE_URL}/api/roles`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(body)
+        });
+        const data = await response.json();
+        startQuestions();
+    } catch (error) {
+        console.log(error);
     }
-    const response = await fetch(`${BASE_URL}/api/roles`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body)
-    });
-    const data = await response.json();
-  } catch (error) {
-    console.log(error);
-  }
 }
 
-    module.exports = startQuestions;
+//Function to add employee.
+async function addEmployees() {
+    try {
+        const roleResponse = await fetch(`${BASE_URL}/api/roles`);
+        const roles = await roleResponse.json();
+        const managerResponse = await fetch(`${BASE_URL}/api/employees`);
+        const managersData = await managerResponse.json();
+        const managers = [...managersData.data, {first_name: "N/A", id: null, last_name: ""}]
+        const answers = await inquirer.prompt([{
+            type: "input",
+            name: "first_name",
+            message: "Enter employee's first name:",
+        }, {
+            type: "input",
+            name: "last_name",
+            message: "Enter employee's last name:",
+        }, {
+            type: "list",
+            name: "role",
+            message: "Select employee's role:",
+            choices: roles.data.map(
+                (role) => role.title
+            )
+        }, {
+            type: "list",
+            name: "manager",
+            message: "Select employee's manager:",
+            choices: managers.map(
+                (manager) => `${manager.first_name} ${manager.last_name}`
+            )
+        }]);
+        const role = roles.data.find(
+            (role) => role.title === answers.role
+        );
+        const manager = managers.find(
+            (manager) => `${manager.first_name} ${manager.last_name}` === answers.manager
+        );
+        const body = {
+            first_name: answers.first_name,
+            last_name: answers.last_name,
+            role_id: role.id,
+            manager_id: manager.id,
+        }
+        const response = await fetch(`${BASE_URL}/api/employees`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(body)
+        });
+        const data = await response.json();
+        startQuestions();
+    } catch (error) {
+        console.log(error);
+    }
+}
+
+//Function to update employee.
+async function updateEmployeeRole() {
+    try {
+        const roleResponse = await fetch(`${BASE_URL}/api/roles`);
+        const roles = await roleResponse.json();
+        const employeeResponse = await fetch(`${BASE_URL}/api/employees`);
+        const employees = await employeeResponse.json();
+        const answers = await inquirer.prompt([{
+            type: "list",
+            name: "employee",
+            message: "Select employee:",
+            choices: employees.data.map(
+                (employee) => `${employee.first_name} ${employee.last_name}`
+            )
+        }, {
+            type: "list",
+            name: "role",
+            message: "Select employee's role:",
+            choices: roles.data.map(
+                (role) => role.title
+            )
+        }]);
+        const employee = employees.data.find(
+            (employee) => `${employee.first_name} ${employee.last_name}` === answers.employee
+        );
+        const role = roles.data.find(
+            (role) => role.title === answers.role
+        );
+        const body = {
+            role_id: role.id,
+        }
+        const response = await fetch(`${BASE_URL}/api/employees/${employee.id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(body)
+        });
+        const data = await response.json();
+        startQuestions();
+    } catch (error) {
+        console.log(error);
+    }
+}
+
+module.exports = startQuestions;
